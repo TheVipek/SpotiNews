@@ -1,7 +1,7 @@
 local json = require("./lua_modules/share/lua/5.4/dkjson");
 local http = require("./deps/coro-http");
-local sMath = require("./SigmaMath");
-local sParser = require("./SigmaParser");
+local sMath = require("./Helpers/SigmaMath");
+local sParser = require("./Helpers/SigmaParser");
 local base64 = require("./deps/base64");
 SpotifyHelper = {}
 

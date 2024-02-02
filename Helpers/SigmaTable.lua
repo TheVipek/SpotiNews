@@ -1,0 +1,4 @@
+SigmaTable = {}
+
+
+return SigmaTable;
