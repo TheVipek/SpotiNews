@@ -1,8 +1,8 @@
-local json = require("./lua_modules/share/lua/5.4/dkjson");
-local http = require("./deps/coro-http");
-local sMath = require("./Helpers/SigmaMath");
-local sParser = require("./Helpers/SigmaParser");
-local base64 = require("./deps/base64");
+local json = require("../lua_modules/share/lua/5.4/dkjson");
+local http = require("../deps/coro-http");
+local sMath = require("./SigmaMath");
+local sParser = require("./SigmaParser");
+local base64 = require("../deps/base64");
 SpotifyHelper = {}
 
 function SpotifyHelper:new(id, secret)
@@ -71,6 +71,24 @@ function SpotifyHelper:GetNewAlbumReleases(days, limit)
     end
 
     return newReleases;
+end
+
+function SpotifyHelper:GetArtist(artistID)
+    local url = "https://api.spotify.com/v1/artists/" .. artistID;
+    local token = GetAccessToken(self.clientID, self.clientSecret);
+    if token ~= nil then
+        local headers = {
+            { "Content-Type",  "application/json" },
+            { "Authorization", "Bearer " .. token }
+        };
+        local res, body = http.request('GET', url, headers);
+
+        if res.code == 200 then
+            return json.decode(body);
+        end
+    end
+
+    return nil;
 end
 
 return SpotifyHelper;
