@@ -4,19 +4,19 @@ local config = require('./config');
 local spotifyHelper = require("./Helpers/SpotifyHelper");
 
 local helper = spotifyHelper:new(config.SPOTIFY_CLIENT_ID, config.SPOTIFY_CLIENT_SECRET);
-local prefix = "!";
-
-
-
-local function GetArgs(message)
+local MAX_REPLIES = 10;
+---@param str string
+---@return table
+local function GetArgs(str)
 	local args = {};
-	for arg in string.gmatch(message.content, "%S+") do
+	for arg in string.gmatch(str, "%S+") do
 		args[#args + 1] = arg;
-		print(arg);
 	end
 	return args;
 end
 
+---@param releases table from SpotifyHelper
+---@return table
 local function CreateReleasesAsEmbeds(releases)
 	local selectedEmbeds = {};
 	for i = 1, #releases, 1 do
@@ -29,7 +29,6 @@ local function CreateReleasesAsEmbeds(releases)
 				name = table.concat(output, ',', 1, #output)
 			};
 		end
-
 		local getImageUrl = function()
 			if releases[i].images[1] ~= nil then
 				return {
@@ -45,9 +44,6 @@ local function CreateReleasesAsEmbeds(releases)
 			}
 		end
 
-		local image = getImageUrl();
-
-
 		-- 1. Author -> Authors Name
 		-- 2. Fields -> Tracks Count
 		-- 3. Image -> Album Cover
@@ -55,7 +51,7 @@ local function CreateReleasesAsEmbeds(releases)
 		-- TODO: Find most dominant color in image and set it as color of embed
 		selectedEmbeds[#selectedEmbeds + 1] = {
 			title = releases[i].name,
-			url = releases[i].external_urls.spotify,
+			url = releases[i].external_urls.spotify ~= nil and releases[i].external_urls.spotify or "",
 			author = getCreatorsName(),
 			fields = {
 				{
@@ -64,7 +60,7 @@ local function CreateReleasesAsEmbeds(releases)
 					inline = true,
 				}
 			},
-			image = image,
+			image = getImageUrl(),
 			footer = {
 				text = "Release Date \n" .. releases[i].release_date,
 			}
@@ -73,13 +69,14 @@ local function CreateReleasesAsEmbeds(releases)
 	return selectedEmbeds;
 end
 
+local prefix = "!";
 local commands = {
-	["!newReleases"] = function(message, args)
+	[prefix .. "newReleases"] = function(message, args)
 		if args.days == nil or args.days == 0 then
 			message:reply("You didn't specificed days (1-x)")
 			return;
 		end
-		local releasesAsEmbeds = CreateReleasesAsEmbeds(helper:GetNewAlbumReleases(args.days, 50));
+		local releasesAsEmbeds = CreateReleasesAsEmbeds(helper:GetNewAlbumReleases(args.days, MAX_REPLIES));
 		if #releasesAsEmbeds > 0 then
 			message:reply {
 				embeds = releasesAsEmbeds
@@ -96,7 +93,7 @@ client:on("ready", function()
 end)
 
 client:on("messageCreate", function(message)
-	local args = GetArgs(message);
+	local args = GetArgs(message.content);
 	if commands[args[1]] then
 		commands[args[1]](message, { days = tonumber(args[2]) });
 	end
