@@ -100,7 +100,6 @@ function SpotifyHelper:GetArtistByName(artistName)
 
         local params = urlHelper:urlEscape("artist:" .. artistName);
         url = url .. "?q=" .. params .. "&type=artist";
-        print(url);
         local res, body = http.request('GET', url, headers);
         if res.code == 200 then
             local data = json.decode(body);

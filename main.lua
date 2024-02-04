@@ -5,11 +5,11 @@ local spotifyHelper = require("./Helpers/SpotifyHelper");
 
 local helper = spotifyHelper:new(config.SPOTIFY_CLIENT_ID, config.SPOTIFY_CLIENT_SECRET);
 local MAX_REPLIES = 10;
+math.randomseed(os.time());
 
 local function GetCommand(str)
 	return string.match(str, "^%S+")
 end
-
 ---@return table
 local function GetArgs(str)
 	local args = {}
@@ -25,7 +25,7 @@ end
 local prefix = "!";
 local commands = {
 	---@param args any need to specify
-	[prefix .. "newReleases"] = function(message, args)
+	[prefix .. "latestReleases"] = function(message, args)
 		if args[1] == nil or args[1] == 0 then
 			message:reply("You didn't specificed days (1-x)")
 			return;
@@ -77,7 +77,8 @@ local commands = {
 				image = getImageUrl(),
 				footer = {
 					text = "Release Date \n" .. releases[i].release_date,
-				}
+				},
+				color = math.random(0, 0xFFFFFF),
 			}
 		end
 
@@ -89,56 +90,48 @@ local commands = {
 			message:reply("Couldn't find any new releases");
 		end
 	end,
-	[prefix .. "getArtistDiscography"] = function(message, args)
+	[prefix .. "artistDiscography"] = function(message, args)
 		if args[1] == nil or args[1] == "" then
 			message:reply("Please specify what artist discography you want to get")
 		end
 		local artist = helper:GetArtistByName(args[1]);
-		local getImageUrl = function()
-			if artist.images[1] ~= nil then
-				return {
-					url = artist.images[1].url,
-					--height = artist.images[1].images[1].height,
-					--width = artist.images[1].images[1].width
-					height = 100,
-					width = 100
-				}
-			end
-			return {
-				url = "",
-				height = 0,
-				width = 0
-			}
-		end
 		local getReleasedAlbums = function()
-			local fields = {};
 			local artistAlbums = helper:GetArtistAlbums(artist.id);
+			local fields = {};
 			for _, value in ipairs(artistAlbums.items) do
-				fields[#fields + 1] = {
-					name = "[" .. value.album_type .. "] " .. value.name,
-					value = value.release_date,
-					inline = false
-				}
-			end
+				if value.album_type ~= "single" then
+					fields[#fields + 1] = {
+						name = "**" .. value.release_date .. "**",
+						value = "[" ..
+							value.name ..
+							"](" ..
+							value.external_urls.spotify ..
+							")" .. "\u{2003}" .. "(" .. "[cover](" .. value.images[1].url .. ")" .. ")"
+					}
+				end
 
+				--Discord LIMIT
+				if #fields == 25 then
+					break;
+				end
+			end
 			return fields;
 		end
 		getReleasedAlbums();
 		local embed = {
 			title = "Discography",
-			--url = "",
 			author =
 			{
 				name = artist.name,
-				url = artist.external_urls.spotify
+				url = artist.external_urls.spotify,
+				icon_url = artist.images[1].url
 			},
-			image = getImageUrl(),
 			fields = getReleasedAlbums(),
 			footer = {
 				text = "Albums found on Spotify"
-			}
+			},
+			color = math.random(0, 0xFFFFFF),
 		}
-		print(message);
 		message:reply {
 			embed = embed
 		}
