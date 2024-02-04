@@ -3,6 +3,7 @@ local http = require("../deps/coro-http");
 local sMath = require("./SigmaMath");
 local sParser = require("./SigmaParser");
 local base64 = require("../deps/base64");
+local urlHelper = require("./UrlHelper");
 SpotifyHelper = {}
 
 function SpotifyHelper:new(id, secret)
@@ -26,15 +27,12 @@ local function GetAccessToken(id, secret)
 
     local body = "grant_type=client_credentials"
 
-    -- Make the POST request to get the token
     local res, tokenResponse = http.request('POST', tokenUrl, headers, body)
 
     if res.code == 200 then
-        -- Assuming the response is JSON with an access_token field
         local tokenData = json.decode(tokenResponse)
         return tokenData.access_token
     else
-        -- Handle error: invalid response, no token, etc.
         print("Error obtaining access token:", res.reason)
         return nil
     end
@@ -83,6 +81,45 @@ function SpotifyHelper:GetArtist(artistID)
         };
         local res, body = http.request('GET', url, headers);
 
+        if res.code == 200 then
+            return json.decode(body);
+        end
+    end
+
+    return nil;
+end
+
+function SpotifyHelper:GetArtistByName(artistName)
+    local url = "https://api.spotify.com/v1/search";
+    local token = GetAccessToken(self.clientID, self.clientSecret);
+    if token ~= nil then
+        local headers = {
+            { "Content-Type",  "application/json" },
+            { "Authorization", "Bearer " .. token }
+        };
+
+        local params = urlHelper:urlEscape("artist:" .. artistName);
+        url = url .. "?q=" .. params .. "&type=artist";
+        print(url);
+        local res, body = http.request('GET', url, headers);
+        if res.code == 200 then
+            local data = json.decode(body);
+            return data.artists.items[1] ~= nil and data.artists.items[1] or nil;
+        end
+    end
+
+    return nil;
+end
+
+function SpotifyHelper:GetArtistAlbums(artistID)
+    local url = "https://api.spotify.com/v1/artists/" .. artistID .. "/albums";
+    local token = GetAccessToken(self.clientID, self.clientSecret);
+    if token ~= nil then
+        local headers = {
+            { "Content-Type",  "application/json" },
+            { "Authorization", "Bearer " .. token }
+        };
+        local res, body = http.request('GET', url, headers);
         if res.code == 200 then
             return json.decode(body);
         end
