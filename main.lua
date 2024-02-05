@@ -1,9 +1,9 @@
 local discordia = require('./deps/discordia')
 local client = discordia.Client()
 local config = require('./config');
-local spotifyHelper = require("./Helpers/SpotifyHelper");
+local spotifyHelper = require("./Helpers/SpotifyHelper"):new(config.SPOTIFY_CLIENT_ID, config.SPOTIFY_CLIENT_SECRET);
+-- local chatGPTHelper = require("./Helpers/ChatGPTHelper"):new(config.CHATGPT_APIKEY);
 
-local helper = spotifyHelper:new(config.SPOTIFY_CLIENT_ID, config.SPOTIFY_CLIENT_SECRET);
 local MAX_REPLIES = 10;
 math.randomseed(os.time());
 
@@ -14,7 +14,7 @@ end
 local function GetArgs(str)
 	local args = {}
 
-	for arg in string.gmatch(str, "%S+") do
+	for arg in string.gmatch(str, "'([^']+)") do
 		args[#args + 1] = arg:gsub("'", "");
 	end
 	return args
@@ -31,7 +31,7 @@ local commands = {
 			return;
 		end
 
-		local releases = helper:GetNewAlbumReleases(tonumber(args[1]), MAX_REPLIES)
+		local releases = spotifyHelper:GetNewAlbumReleases(tonumber(args[1]), MAX_REPLIES)
 		local selectedEmbeds = {};
 		for i = 1, #releases, 1 do
 			local getCreatorsName = function()
@@ -94,9 +94,9 @@ local commands = {
 		if args[1] == nil or args[1] == "" then
 			message:reply("Please specify what artist discography you want to get")
 		end
-		local artist = helper:GetArtistByName(args[1]);
+		local artist = spotifyHelper:GetArtistByName(args[1]);
 		local getReleasedAlbums = function()
-			local artistAlbums = helper:GetArtistAlbums(artist.id);
+			local artistAlbums = spotifyHelper:GetArtistAlbums(artist.id);
 			local fields = {};
 			for _, value in ipairs(artistAlbums.items) do
 				if value.album_type ~= "single" then
@@ -135,6 +135,54 @@ local commands = {
 		message:reply {
 			embed = embed
 		}
+	end,
+	[prefix .. "albumInfo"] = function(message, args)
+		if args[1] == nil or args[1] == "" then
+			message:reply("Please specify what artist album you want to get")
+		end
+		-- print(chatGPTHelper:Ask("Give me fun fact about Kids See Ghosts", 5,
+		-- 	"You're music evaluator, which gives answer which only contains text about what user asked, without any formalities"))
+		local albumByNameData = spotifyHelper:GetAlbumByName(args[1]);
+		local albumByIdData = spotifyHelper:GetAlbum(albumByNameData.id);
+
+		local getAlbumTracklist = function()
+			local fields = {};
+			for idx, track in ipairs(albumByIdData.tracks.items) do
+				local msToSec = tonumber(track.duration_ms) / 1000;
+				fields[#fields + 1] = {
+					name = idx .. "." .. "**" .. track.name .. "**",
+					value = tostring(math.floor(msToSec / 60) .. ":" .. math.floor(msToSec % 60))
+				}
+				--Discord LIMIT
+				if #fields == 25 then
+					break;
+				end
+			end
+
+			return fields;
+		end
+
+		local embed = {
+			author =
+			{
+				name = albumByNameData.name,
+				url = albumByNameData.external_urls.spotify,
+				icon_url = albumByNameData.images[1].url
+			},
+			fields = getAlbumTracklist(),
+			footer = {
+				text = albumByNameData.release_date .. "\n" .. albumByIdData.label
+			},
+			color = math.random(0, 0xFFFFFF)
+		}
+		message:reply {
+			embed = embed
+		}
+	end,
+	[prefix .. "trackInformation"] = function(message, args)
+		if args[1] == nil or args[1] == "" then
+			message:reply("Please specify what track information you want to get")
+		end
 	end
 
 
@@ -147,8 +195,7 @@ end)
 client:on("messageCreate", function(message)
 	local command = GetCommand(message.content);
 	if commands[command] then
-		local args = GetArgs(message.content:sub(#command + 2));
-
+		local args = GetArgs(message.content:sub(#command + 1));
 		commands[command](message, args);
 	end
 end)

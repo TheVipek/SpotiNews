@@ -38,7 +38,6 @@ local function GetAccessToken(id, secret)
     end
 end
 
-
 function SpotifyHelper:GetNewAlbumReleases(days, limit)
     days = sMath.Clamp(days, 0, 30);
     limit = sMath.Clamp(limit, 0, 50);
@@ -125,6 +124,52 @@ function SpotifyHelper:GetArtistAlbums(artistID)
     end
 
     return nil;
+end
+
+function SpotifyHelper:GetAlbum(albumID)
+    local url = "https://api.spotify.com/v1/albums/" .. albumID;
+    local token = GetAccessToken(self.clientID, self.clientSecret);
+    if token ~= nil then
+        local headers = {
+            { "Content-Type",  "application/json" },
+            { "Authorization", "Bearer " .. token }
+        };
+        local res, body = http.request('GET', url, headers);
+        if res.code == 200 then
+            return json.decode(body);
+        end
+    end
+
+    return nil;
+end
+
+function SpotifyHelper:GetAlbumByName(albumName)
+    local url = "https://api.spotify.com/v1/search";
+    local token = GetAccessToken(self.clientID, self.clientSecret);
+    if token ~= nil then
+        local headers = {
+            { "Content-Type",  "application/json" },
+            { "Authorization", "Bearer " .. token }
+        };
+
+        local params = urlHelper:urlEscape("album:" .. albumName);
+        url = url .. "?q=" .. params .. "&type=album";
+        local res, body = http.request('GET', url, headers);
+        if res.code == 200 then
+            local data = json.decode(body);
+            return data.albums.items[1] ~= nil and data.albums.items[1] or nil;
+        end
+    end
+
+    return nil;
+end
+
+function SpotifyHelper:GetTrack(trackID)
+
+end
+
+function SpotifyHelper:GetTrackByName(trackName)
+
 end
 
 return SpotifyHelper;

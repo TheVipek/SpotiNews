@@ -2,4 +2,7 @@ return {
     TOKEN = "XXX",
     CLIENT_SECRET = "XXX",
     TEST_CHANNEL = "XXX",
+    SPOTIFY_CLIENT_ID = "XXX",
+    SPOTIFY_CLIENT_SECRET = "XXX",
+    CHATGPT_APIKEY = "XXX"
 }
