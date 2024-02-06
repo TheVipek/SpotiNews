@@ -183,6 +183,47 @@ local commands = {
 		if args[1] == nil or args[1] == "" then
 			message:reply("Please specify what track information you want to get")
 		end
+		local trackData = spotifyHelper:GetTrackByName(args[1]);
+		local msToSec = tonumber(trackData.duration_ms) / 1000;
+		local minutes = math.floor(msToSec / 60);
+		local seconds = math.floor(msToSec % 60);
+		local formatedSeconds = (seconds < 10) and "0" .. seconds or seconds;
+		local getCreatorsName = function()
+			local output = {};
+			for _, artist in ipairs(trackData.artists) do
+				output[#output + 1] = "[" .. artist.name .. "](" .. artist.external_urls.spotify .. ")";
+			end
+			return {
+				name = table.concat(output, ',', 1, #output)
+			};
+		end
+
+		local embed = {
+			author =
+			{
+				name = trackData.name,
+				url = trackData.external_urls.spotify,
+				icon_url = trackData.album.images[1].url
+			},
+			fields = {
+				{
+					name = "Author",
+					value = getCreatorsName().name
+				},
+				{
+					name = "Release Date",
+					value = trackData.album.release_date
+				},
+				{
+					name = "Duration",
+					value = tostring(minutes .. ":" .. formatedSeconds)
+				}
+			},
+			color = math.random(0, 0xFFFFFF)
+		}
+		message:reply {
+			embed = embed
+		}
 	end
 
 
