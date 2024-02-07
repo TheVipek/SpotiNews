@@ -1,6 +1,5 @@
 return {
-    TOKEN = "XXX",
-    CLIENT_SECRET = "XXX",
+    DISCORD_TOKEN = "XXX",
     SPOTIFY_CLIENT_ID = "XXX",
     SPOTIFY_CLIENT_SECRET = "XXX",
     CHATGPT_APIKEY = "XXX",

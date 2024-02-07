@@ -18,7 +18,7 @@ local function SpotifyRequest(obj, method, ...)
     if data == nil then
         error("To use Spotify API, please setup correctly client id and secret in config.lua", 3);
     end
-    return spotifyHelper;
+    return data;
 end
 
 local prefix = "!";
@@ -100,9 +100,8 @@ local commands = {
                 "You're music veteran. Please format it correctly.Few sentences maximum.");
 
             local artist = SpotifyRequest(spotifyHelper, spotifyHelper.GetArtistByName, args[1]);
-            -- local artist = SpotifyRequest(spotifyHelper:GetArtistByName(args[1]));
             local getReleasedAlbums = function()
-                local artistAlbums = spotifyHelper:GetArtistAlbums(artist.id);
+                local artistAlbums = SpotifyRequest(spotifyHelper, spotifyHelper.GetArtistAlbums, artist.id);
                 local fields = {};
                 for _, value in ipairs(artistAlbums.items) do
                     if value.album_type ~= "single" then
@@ -154,8 +153,6 @@ local commands = {
 
             local albumByNameData = SpotifyRequest(spotifyHelper, spotifyHelper.GetAlbumByName, args[1]);
             local albumByIdData = SpotifyRequest(spotifyHelper, spotifyHelper.GetAlbum, albumByNameData.id);
-            -- local albumByNameData = SpotifyRequest(spotifyHelper:GetAlbumByName(args[1]));
-            -- local albumByIdData = SpotifyRequest(spotifyHelper:GetAlbum(albumByNameData.id));
             local desc = AskChatGPT("Give me description for " .. albumByNameData.name,
                 "You're music veteran. Please format it correctly.Few sentences maximum.");
 
@@ -206,7 +203,6 @@ local commands = {
             message:reply("Looking for informations about " .. '"' .. args[1] .. '"' .. " track...");
 
             local trackData = SpotifyRequest(spotifyHelper, spotifyHelper.GetTrackByName, args[1]);
-            -- local trackData = SpotifyRequest(spotifyHelper:GetTrackByName(args[1]));
             local desc = AskChatGPT(
                 "Give me interesting facts about song named " .. trackData.name,
                 "You're music veteran. Please format it correctly.Few sentences maximum.");

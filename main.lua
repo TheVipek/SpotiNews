@@ -15,4 +15,4 @@ client:on("messageCreate", function(message)
 end)
 
 
-client:run('Bot ' .. config.TOKEN);
+client:run('Bot ' .. config.DISCORD_TOKEN);
