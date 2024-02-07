@@ -1,6 +1,6 @@
 local base64 = require("../deps/base64");
 local http = require("../deps/coro-http");
-local json = require("../lua_modules/share/lua/5.4/dkjson");
+local json = require("../deps/json");
 
 AccessTokenHelper = {}
 --ADD MECHANIC FOR CHECKING IF TOKEN EXPIRED, TO REDUCE AMOUNT OF REQUESTS

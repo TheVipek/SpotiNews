@@ -1,6 +1,6 @@
 local ChatGPTHelper = {}
 
-local json = require("../lua_modules/share/lua/5.4/dkjson");
+local json = require("../deps/json");
 local http = require("../deps/coro-http");
 
 

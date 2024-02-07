@@ -76,7 +76,7 @@ local commands = {
             if args[1] == nil or args[1] == "" then
                 error("Specify artist", 2);
             end
-            message:reply("Looking for data about " .. '"' .. args .. '"' .. " discography...");
+            message:reply("Looking for data about " .. '"' .. args[1] .. '"' .. " discography...");
 
             local desc = chatGPTHelper:Ask("Give me description for " .. args[1] .. " discography.",
                 "You're music veteran. Please format it correctly.Few sentences maximum.");
@@ -175,7 +175,7 @@ local commands = {
         end,
         description = "This command lets you get informations about album => _Arg: name of album_"
     },
-    [prefix .. "trackInformation"] =
+    [prefix .. "trackInfo"] =
     {
         call = function(message, args)
             if args[1] == nil or args[1] == "" then
@@ -233,7 +233,7 @@ local commands = {
         end,
         description = "This command lets you get informations about track => _Arg: name of track_"
     },
-    [prefix .. "trackLyrics"] =
+    [prefix .. "lyrics"] =
     {
         call = function(message, args)
             error("Functionality not implemented.", 2);
@@ -258,19 +258,19 @@ local commands = {
         description =
         "~~This command lets you get informations about lyrics => Arg: name of track (for better results you can add name of artist)~~ UNAVALIABLE"
     },
-    [prefix .. "musicFactsAndTrivia"] =
+    [prefix .. "facts"] =
     {
         call = function(message, args)
             if args[1] == nil or args[1] == "" then
                 error("Specify topic", 2);
             end
-            message:reply("If answer won't be appropriate,please provide more data.Searching for " ..
-                args[1] .. " facts...");
+            message:reply("If answer won't be appropriate,please provide more data.Searching for " .. '"' ..
+                args[1] .. '"' .. " facts...");
             local info = chatGPTHelper:Ask("Give me interestring facts / trivia about" .. args[1],
-                "You're music veteran.Please format it correctly.Maximum 1024 characters.");
+                "You're music veteran.Please format it correctly.Keep it in few sentences.");
             local embed = {
                 author = {
-                    name = "Interesting Stuff"
+                    name = "Facts about " .. args[1]
                 },
                 description = info,
                 color = math.random(0, 0xFFFFFF)
@@ -287,12 +287,12 @@ local commands = {
             if args[1] == nil or args[1] == "" then
                 error("Specify genres", 2);
             end
-            message:reply("If answer won't be appropriate,please provide more data.Searching for " ..
-                args[1] .. " recommendations...");
+            message:reply("If answer won't be appropriate,please provide more data.Searching for " .. '"' ..
+                args[1] .. '"' .. " recommendations...");
             local info = chatGPTHelper:Ask(
                 "Give me genres i could like.The ones that i enjoy: " ..
                 args[1] .. " If you find any, tell me why i could like them",
-                "You're music veteran.Please format it correctly.Maximum 1024 characters.");
+                "You're music veteran.Please format it correctly.Keep it in 10 sentences maximum.");
             local embed = {
                 author = {
                     name = "Genre Recommendations"
@@ -315,14 +315,15 @@ local commands = {
                 message:reply("You didn't specified about what you want to hear joke.Looking for random...");
                 response = chatGPTHelper:Ask(
                     "Please tell me music joke",
-                    "You're comedian.Please format it correctly.Maximum 1024 characters.");
+                    "You're comedian.Please format it correctly.Maximum few sentences.");
             else
                 message:reply("If answer won't be appropriate,please provide more data.Searching for joke about " ..
-                    args[1] .. "...");
+                    '"' ..
+                    args[1] .. '"' .. "...");
                 response = chatGPTHelper:Ask(
                     "Please tell me music joke about" .. args[1],
                     "You're comedian and your jokes focus on music industry, surrounding it topics."
-                    .. "Please format it correctly.Maximum 1024 characters.");
+                    .. "Please format it correctly.Maximum few sentences.");
             end
             local embed = {
                 author = {
