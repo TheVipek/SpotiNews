@@ -2,7 +2,7 @@ local discordia = require('./deps/discordia')
 local client = discordia.Client()
 local config = require('./config');
 local spotifyHelper = require("./Helpers/SpotifyHelper"):new(config.SPOTIFY_CLIENT_ID, config.SPOTIFY_CLIENT_SECRET);
--- local chatGPTHelper = require("./Helpers/ChatGPTHelper"):new(config.CHATGPT_APIKEY);
+local chatGPTHelper = require("./Helpers/ChatGPTHelper"):new(config.CHATGPT_APIKEY);
 
 local MAX_REPLIES = 10;
 math.randomseed(os.time());
@@ -118,8 +118,10 @@ local commands = {
 			return fields;
 		end
 		getReleasedAlbums();
+		local desc = chatGPTHelper:Ask("Give me description for " .. args[1] .. " discography.",
+			"You're music veteran. Please format it correctly.Maximum 1024 characters.");
 		local embed = {
-			title = "Discography",
+			description = desc,
 			author =
 			{
 				name = artist.name,
@@ -140,8 +142,7 @@ local commands = {
 		if args[1] == nil or args[1] == "" then
 			message:reply("Please specify what artist album you want to get")
 		end
-		-- print(chatGPTHelper:Ask("Give me fun fact about Kids See Ghosts", 5,
-		-- 	"You're music evaluator, which gives answer which only contains text about what user asked, without any formalities"))
+
 		local albumByNameData = spotifyHelper:GetAlbumByName(args[1]);
 		local albumByIdData = spotifyHelper:GetAlbum(albumByNameData.id);
 
@@ -162,6 +163,8 @@ local commands = {
 			return fields;
 		end
 
+		local desc = chatGPTHelper:Ask("Give me description for " .. albumByNameData.name,
+			"You're music veteran. Please format it correctly.Maximum 1024 characters.");
 		local embed = {
 			author =
 			{
@@ -169,6 +172,7 @@ local commands = {
 				url = albumByNameData.external_urls.spotify,
 				icon_url = albumByNameData.images[1].url
 			},
+			description = desc,
 			fields = getAlbumTracklist(),
 			footer = {
 				text = albumByNameData.release_date .. "\n" .. albumByIdData.label
@@ -197,7 +201,9 @@ local commands = {
 				name = table.concat(output, ',', 1, #output)
 			};
 		end
-
+		local desc = chatGPTHelper:Ask(
+			"Give me interesting facts about song named " .. trackData.name,
+			"You're music veteran. Please format it correctly.Maximum 1024 characters.");
 		local embed = {
 			author =
 			{
@@ -205,6 +211,7 @@ local commands = {
 				url = trackData.external_urls.spotify,
 				icon_url = trackData.album.images[1].url
 			},
+			description = desc,
 			fields = {
 				{
 					name = "Author",
@@ -219,6 +226,87 @@ local commands = {
 					value = tostring(minutes .. ":" .. formatedSeconds)
 				}
 			},
+			color = math.random(0, 0xFFFFFF)
+		}
+		message:reply {
+			embed = embed
+		}
+	end,
+	[prefix .. "trackLyrics"] = function(message, args)
+		if args[1] == nil or args[1] == "" then
+			message:reply("Please specify what track lyrics you want to get")
+		end
+		--"You're music evaluator, which gives answer which only contains text about what user asked, without any formalities. Keep it in 3 sentences maximum"
+		message:reply("If answer won't be appropriate,please give more information. Thinking...");
+		local lyrics = chatGPTHelper:Ask("Give me lyrics for " .. args[1] .. "",
+			"Response only with song lyrics.Please format it correctly");
+		local embed = {
+			field = {
+				name = "LYRICS for " .. args[1],
+				value = lyrics
+			},
+			color = math.random(0, 0xFFFFFF)
+		}
+		message:reply {
+			embed = embed
+		}
+	end,
+	[prefix .. "musicFactsAndTrivia"] = function(message, args)
+		if args[1] == nil or args[1] == "" then
+			message:reply("Please specify what facts / trivia you want to retrieve")
+		end
+		message:reply("If answer won't be appropriate,please give more information. Thinking...");
+		local info = chatGPTHelper:Ask("Give me interestring facts / trivia about" .. args[1],
+			"You're music veteran.Please format it correctly.Maximum 1024 characters.");
+		local embed = {
+			author = {
+				name = "Interesting Stuff"
+			},
+			description = info,
+			color = math.random(0, 0xFFFFFF)
+		}
+		message:reply {
+			embed = embed
+		}
+	end,
+	[prefix .. "genreRecommendations"] = function(message, args)
+		if args[1] == nil or args[1] == "" then
+			message:reply("Please specify what genres you listen to")
+		end
+		message:reply("If answer won't be appropriate,please give more information. Thinking...");
+		local info = chatGPTHelper:Ask(
+			"Give me genres i could like.The ones that i enjoy: " ..
+			args[1] .. " If you find any, tell me why i could like them",
+			"You're music veteran.Please format it correctly.Maximum 1024 characters.");
+		local embed = {
+			author = {
+				name = "Genre Recommendations"
+			},
+			description = info,
+			color = math.random(0, 0xFFFFFF)
+		}
+		message:reply {
+			embed = embed
+		}
+	end,
+	[prefix .. "musicJoke"] = function(message, args)
+		local response;
+		if args[1] == nil or args[1] == "" then
+			response = chatGPTHelper:Ask(
+				"Please tell me music joke",
+				"You're comedian.Please format it correctly.Maximum 1024 characters.");
+		else
+			response = chatGPTHelper:Ask(
+				"Please tell me music joke about" .. args[1],
+				"You're comedian and your jokes focus on music industry, surrounding it topics."
+				.. "Please format it correctly.Maximum 1024 characters.");
+		end
+		message:reply("If answer won't be appropriate,please give more information. Thinking...");
+		local embed = {
+			author = {
+				name = "Music Joke"
+			},
+			description = response,
 			color = math.random(0, 0xFFFFFF)
 		}
 		message:reply {
