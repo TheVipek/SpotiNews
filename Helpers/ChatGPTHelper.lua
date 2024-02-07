@@ -13,10 +13,13 @@ function ChatGPTHelper:new(ApiKey)
     return obj;
 end
 
+---@param prompt string prompt string The user's input prompt to send to ChatGPT.
+---@param systemInfo string systemInfo System-level information or context to provide to ChatGPT.
+---@return table A table containing the response code and the ChatGPT-generated message.
 function ChatGPTHelper:Ask(prompt, systemInfo)
     local data = {
         model = "gpt-4-0125-preview",
-        messages = { -- Using 'messages' as per chat API format
+        messages = {
             {
                 role = "system",
                 content = systemInfo

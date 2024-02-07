@@ -16,6 +16,7 @@ function SpotifyHelper:new(id, secret)
     return obj;
 end
 
+-- Authorizes with Spotify API using client credentials to obtain an access token.
 local function Authorize(endpoint, id, secret)
     local headers = {
         { "Content-Type",  "application/x-www-form-urlencoded" },
@@ -33,6 +34,7 @@ local function Authorize(endpoint, id, secret)
     end
 end
 
+-- Fetches new album releases within a specified timeframe and limit.
 function SpotifyHelper:GetNewAlbumReleases(days, limit)
     days = sMath.Clamp(days, 0, 30);
     limit = sMath.Clamp(limit, 0, 50);
@@ -69,6 +71,7 @@ function SpotifyHelper:GetNewAlbumReleases(days, limit)
     return newReleases;
 end
 
+-- Retrieves details for a specific artist by their Spotify ID.
 function SpotifyHelper:GetArtist(artistID)
     local tokenResult = Authorize(self.tokenEndPoint, self.clientID, self.clientSecret);
     if tokenResult.code ~= 200 then
@@ -91,6 +94,7 @@ function SpotifyHelper:GetArtist(artistID)
     return nil;
 end
 
+-- Searches for an artist by name and returns their details.
 function SpotifyHelper:GetArtistByName(artistName)
     local tokenResult = Authorize(self.tokenEndPoint, self.clientID, self.clientSecret);
     if tokenResult.code ~= 200 then
@@ -116,6 +120,7 @@ function SpotifyHelper:GetArtistByName(artistName)
     return nil;
 end
 
+-- Fetches albums for a given artist by their Spotify ID.
 function SpotifyHelper:GetArtistAlbums(artistID)
     local tokenResult = Authorize(self.tokenEndPoint, self.clientID, self.clientSecret);
     if tokenResult.code ~= 200 then
@@ -137,6 +142,7 @@ function SpotifyHelper:GetArtistAlbums(artistID)
     return nil;
 end
 
+-- Retrieves details of a specific album by its Spotify ID.
 function SpotifyHelper:GetAlbum(albumID)
     local tokenResult = Authorize(self.tokenEndPoint, self.clientID, self.clientSecret);
     if tokenResult.code ~= 200 then
@@ -158,6 +164,7 @@ function SpotifyHelper:GetAlbum(albumID)
     return nil;
 end
 
+-- Searches for an album by name and returns its details.
 function SpotifyHelper:GetAlbumByName(albumName)
     local tokenResult = Authorize(self.tokenEndPoint, self.clientID, self.clientSecret);
     if tokenResult.code ~= 200 then
@@ -183,6 +190,7 @@ function SpotifyHelper:GetAlbumByName(albumName)
     return nil;
 end
 
+-- Retrieves details of a specific track by its Spotify ID.
 function SpotifyHelper:GetTrack(trackID)
     local tokenResult = Authorize(self.tokenEndPoint, self.clientID, self.clientSecret);
     if tokenResult.code ~= 200 then
@@ -202,6 +210,7 @@ function SpotifyHelper:GetTrack(trackID)
     end
 end
 
+-- Searches for a track by name and returns its details.
 function SpotifyHelper:GetTrackByName(trackName)
     local tokenResult = Authorize(self.tokenEndPoint, self.clientID, self.clientSecret);
     if tokenResult.code ~= 200 then

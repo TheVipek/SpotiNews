@@ -3,6 +3,7 @@ local spotifyHelper = require("../Helpers/SpotifyHelper"):new(config.SPOTIFY_CLI
 local chatGPTHelper = require("../Helpers/ChatGPTHelper"):new(config.CHATGPT_APIKEY);
 math.randomseed(os.time());
 
+-- Sends a prompt to ChatGPT and returns the answer. Errors if API key setup is incorrect.
 local function AskChatGPT(prompt, systemInfo)
     local answer = chatGPTHelper:Ask(prompt, systemInfo);
     if answer.code ~= 200 then
@@ -10,6 +11,8 @@ local function AskChatGPT(prompt, systemInfo)
     end
     return answer.value;
 end
+
+-- Executes a Spotify API request using the specified method and arguments. Errors if credentials are incorrect.
 local function SpotifyRequest(obj, method, ...)
     local data = method(obj, ...);
     if data == nil then
@@ -20,6 +23,7 @@ end
 
 local prefix = "!";
 
+-- Defines commands for a Discord bot, mapping each command to its functionality and description.
 local commands = {
     [prefix .. "latestReleases"] =
     {
@@ -368,6 +372,8 @@ local commands = {
         description = "This command lets you display all commands",
     }
 }
+
+-- Generates and returns descriptions for all available commands for the help menu.
 function GetCommandsDescription()
     local fields = {};
     for k, v in pairs(commands) do
