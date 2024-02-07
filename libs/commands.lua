@@ -3,6 +3,21 @@ local spotifyHelper = require("../Helpers/SpotifyHelper"):new(config.SPOTIFY_CLI
 local chatGPTHelper = require("../Helpers/ChatGPTHelper"):new(config.CHATGPT_APIKEY);
 math.randomseed(os.time());
 
+local function AskChatGPT(prompt, systemInfo)
+    local answer = chatGPTHelper:Ask(prompt, systemInfo);
+    if answer.code ~= 200 then
+        error("To get ChatGPT Answer please setup correctly APIKEY in config.lua", 2);
+    end
+    return answer.value;
+end
+local function SpotifyRequest(obj, method, ...)
+    local data = method(obj, ...);
+    if data == nil then
+        error("To use Spotify API, please setup correctly client id and secret in config.lua", 3);
+    end
+    return spotifyHelper;
+end
+
 local prefix = "!";
 
 local commands = {
@@ -13,8 +28,8 @@ local commands = {
                 error("Specify days", 2);
             end
             message:reply("Looking for releases from past " .. args[1] .. " days...");
-
-            local releases = spotifyHelper:GetNewAlbumReleases(tonumber(args[1]), config.MAX_EMBED_REPLIES)
+            local releases = SpotifyRequest(spotifyHelper, spotifyHelper.GetNewAlbumReleases, tonumber(args[1]),
+                config.MAX_EMBED_REPLIES);
             local selectedEmbeds = {};
             for i = 1, #releases, 1 do
                 local getCreatorsName = function()
@@ -77,10 +92,11 @@ local commands = {
                 error("Specify artist", 2);
             end
             message:reply("Looking for data about " .. '"' .. args[1] .. '"' .. " discography...");
-
-            local desc = chatGPTHelper:Ask("Give me description for " .. args[1] .. " discography.",
+            local desc = AskChatGPT("Give me description for " .. args[1] .. " discography.",
                 "You're music veteran. Please format it correctly.Few sentences maximum.");
-            local artist = spotifyHelper:GetArtistByName(args[1]);
+
+            local artist = SpotifyRequest(spotifyHelper, spotifyHelper.GetArtistByName, args[1]);
+            -- local artist = SpotifyRequest(spotifyHelper:GetArtistByName(args[1]));
             local getReleasedAlbums = function()
                 local artistAlbums = spotifyHelper:GetArtistAlbums(artist.id);
                 local fields = {};
@@ -132,10 +148,11 @@ local commands = {
             end
             message:reply("Looking for informations about " .. '"' .. args[1] .. '"' .. " album...");
 
-            local albumByNameData = spotifyHelper:GetAlbumByName(args[1]);
-            local albumByIdData = spotifyHelper:GetAlbum(albumByNameData.id);
-
-            local desc = chatGPTHelper:Ask("Give me description for " .. albumByNameData.name,
+            local albumByNameData = SpotifyRequest(spotifyHelper, spotifyHelper.GetAlbumByName, args[1]);
+            local albumByIdData = SpotifyRequest(spotifyHelper, spotifyHelper.GetAlbum, albumByNameData.id);
+            -- local albumByNameData = SpotifyRequest(spotifyHelper:GetAlbumByName(args[1]));
+            -- local albumByIdData = SpotifyRequest(spotifyHelper:GetAlbum(albumByNameData.id));
+            local desc = AskChatGPT("Give me description for " .. albumByNameData.name,
                 "You're music veteran. Please format it correctly.Few sentences maximum.");
 
             local getAlbumTracklist = function()
@@ -184,8 +201,9 @@ local commands = {
             end
             message:reply("Looking for informations about " .. '"' .. args[1] .. '"' .. " track...");
 
-            local trackData = spotifyHelper:GetTrackByName(args[1]);
-            local desc = chatGPTHelper:Ask(
+            local trackData = SpotifyRequest(spotifyHelper, spotifyHelper.GetTrackByName, args[1]);
+            -- local trackData = SpotifyRequest(spotifyHelper:GetTrackByName(args[1]));
+            local desc = AskChatGPT(
                 "Give me interesting facts about song named " .. trackData.name,
                 "You're music veteran. Please format it correctly.Few sentences maximum.");
 
@@ -242,7 +260,7 @@ local commands = {
             end
             -- "You're music evaluator, which gives answer which only contains text about what user asked, without any formalities. Keep it in 3 sentences maximum"
             message:reply("If answer won't be appropriate,please give more information. Thinking...");
-            local lyrics = chatGPTHelper:Ask("Give me lyrics for " .. args[1] .. "",
+            local lyrics = AskChatGPT("Give me lyrics for " .. args[1] .. "",
                 "Response only with song lyrics.Please format it correctly");
             local embed = {
                 field = {
@@ -266,7 +284,7 @@ local commands = {
             end
             message:reply("If answer won't be appropriate,please provide more data.Searching for " .. '"' ..
                 args[1] .. '"' .. " facts...");
-            local info = chatGPTHelper:Ask("Give me interestring facts / trivia about" .. args[1],
+            local info = AskChatGPT("Give me interestring facts / trivia about" .. args[1],
                 "You're music veteran.Please format it correctly.Keep it in few sentences.");
             local embed = {
                 author = {
@@ -289,7 +307,7 @@ local commands = {
             end
             message:reply("If answer won't be appropriate,please provide more data.Searching for " .. '"' ..
                 args[1] .. '"' .. " recommendations...");
-            local info = chatGPTHelper:Ask(
+            local info = AskChatGPT(
                 "Give me genres i could like.The ones that i enjoy: " ..
                 args[1] .. " If you find any, tell me why i could like them",
                 "You're music veteran.Please format it correctly.Keep it in 10 sentences maximum.");
@@ -313,14 +331,14 @@ local commands = {
             local response;
             if args[1] == nil or args[1] == "" then
                 message:reply("You didn't specified about what you want to hear joke.Looking for random...");
-                response = chatGPTHelper:Ask(
+                response = AskChatGPT(
                     "Please tell me music joke",
                     "You're comedian.Please format it correctly.Maximum few sentences.");
             else
                 message:reply("If answer won't be appropriate,please provide more data.Searching for joke about " ..
                     '"' ..
                     args[1] .. '"' .. "...");
-                response = chatGPTHelper:Ask(
+                response = AskChatGPT(
                     "Please tell me music joke about" .. args[1],
                     "You're comedian and your jokes focus on music industry, surrounding it topics."
                     .. "Please format it correctly.Maximum few sentences.");

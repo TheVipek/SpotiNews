@@ -33,8 +33,9 @@ function ChatGPTHelper:Ask(prompt, systemInfo)
     };
     local res, body = http.request("POST", self.endpoint, headers, json.encode(data));
     if res.code == 200 then
-        return json.decode(body).choices[1].message.content;
+        return { code = res.code, value = json.decode(body).choices[1].message.content }
     end
+    return { code = res.code, value = "" };
 end
 
 return ChatGPTHelper;

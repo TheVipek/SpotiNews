@@ -3,7 +3,7 @@ local http = require("../deps/coro-http");
 local sMath = require("./SigmaMath");
 local sParser = require("./SigmaParser");
 local urlHelper = require("./UrlHelper");
-local tokenHelper = require("./AccessTokenHelper");
+local base64 = require("../deps/base64");
 SpotifyHelper = {}
 
 function SpotifyHelper:new(id, secret)
@@ -16,13 +16,34 @@ function SpotifyHelper:new(id, secret)
     return obj;
 end
 
+local function Authorize(endpoint, id, secret)
+    local headers = {
+        { "Content-Type",  "application/x-www-form-urlencoded" },
+        { "Authorization", "Basic " .. base64.encode(id .. ':' .. secret) }
+    }
+
+    local body = "grant_type=client_credentials"
+
+    local res, tokenResponse = http.request('POST', endpoint, headers, body)
+    if res.code == 200 then
+        local tokenData = json.decode(tokenResponse);
+        return { code = res.code, value = tokenData.access_token };
+    else
+        return { code = res.code, value = "" };
+    end
+end
+
 function SpotifyHelper:GetNewAlbumReleases(days, limit)
     days = sMath.Clamp(days, 0, 30);
     limit = sMath.Clamp(limit, 0, 50);
-    local url = "https://api.spotify.com/v1/browse/new-releases?limit=" .. limit;
-    local token = tokenHelper:GetBasicAuthorization(self.tokenEndPoint, self.clientID, self.clientSecret);
+    local tokenResult = Authorize(self.tokenEndPoint, self.clientID, self.clientSecret);
+    if tokenResult.code ~= 200 then
+        return nil;
+    end
+    local token = tokenResult.value;
     local newReleases = {};
     if token ~= nil then
+        local url = "https://api.spotify.com/v1/browse/new-releases?limit=" .. limit;
         local headers = {
             { "Content-Type",  "application/json" },
             { "Authorization", "Bearer " .. token }
@@ -49,8 +70,12 @@ function SpotifyHelper:GetNewAlbumReleases(days, limit)
 end
 
 function SpotifyHelper:GetArtist(artistID)
+    local tokenResult = Authorize(self.tokenEndPoint, self.clientID, self.clientSecret);
+    if tokenResult.code ~= 200 then
+        return nil;
+    end
+    local token = tokenResult.value;
     local url = "https://api.spotify.com/v1/artists/" .. artistID;
-    local token = tokenHelper:GetBasicAuthorization(self.tokenEndPoint, self.clientID, self.clientSecret);
     if token ~= nil then
         local headers = {
             { "Content-Type",  "application/json" },
@@ -67,8 +92,12 @@ function SpotifyHelper:GetArtist(artistID)
 end
 
 function SpotifyHelper:GetArtistByName(artistName)
+    local tokenResult = Authorize(self.tokenEndPoint, self.clientID, self.clientSecret);
+    if tokenResult.code ~= 200 then
+        return nil;
+    end
+    local token = tokenResult.value;
     local url = "https://api.spotify.com/v1/search";
-    local token = tokenHelper:GetBasicAuthorization(self.tokenEndPoint, self.clientID, self.clientSecret);
     if token ~= nil then
         local headers = {
             { "Content-Type",  "application/json" },
@@ -88,8 +117,12 @@ function SpotifyHelper:GetArtistByName(artistName)
 end
 
 function SpotifyHelper:GetArtistAlbums(artistID)
+    local tokenResult = Authorize(self.tokenEndPoint, self.clientID, self.clientSecret);
+    if tokenResult.code ~= 200 then
+        return nil;
+    end
+    local token = tokenResult.value;
     local url = "https://api.spotify.com/v1/artists/" .. artistID .. "/albums";
-    local token = tokenHelper:GetBasicAuthorization(self.tokenEndPoint, self.clientID, self.clientSecret);
     if token ~= nil then
         local headers = {
             { "Content-Type",  "application/json" },
@@ -105,8 +138,12 @@ function SpotifyHelper:GetArtistAlbums(artistID)
 end
 
 function SpotifyHelper:GetAlbum(albumID)
+    local tokenResult = Authorize(self.tokenEndPoint, self.clientID, self.clientSecret);
+    if tokenResult.code ~= 200 then
+        return nil;
+    end
+    local token = tokenResult.value;
     local url = "https://api.spotify.com/v1/albums/" .. albumID;
-    local token = tokenHelper:GetBasicAuthorization(self.tokenEndPoint, self.clientID, self.clientSecret);
     if token ~= nil then
         local headers = {
             { "Content-Type",  "application/json" },
@@ -122,8 +159,12 @@ function SpotifyHelper:GetAlbum(albumID)
 end
 
 function SpotifyHelper:GetAlbumByName(albumName)
+    local tokenResult = Authorize(self.tokenEndPoint, self.clientID, self.clientSecret);
+    if tokenResult.code ~= 200 then
+        return nil;
+    end
+    local token = tokenResult.value;
     local url = "https://api.spotify.com/v1/search";
-    local token = tokenHelper:GetBasicAuthorization(self.tokenEndPoint, self.clientID, self.clientSecret);
     if token ~= nil then
         local headers = {
             { "Content-Type",  "application/json" },
@@ -143,8 +184,12 @@ function SpotifyHelper:GetAlbumByName(albumName)
 end
 
 function SpotifyHelper:GetTrack(trackID)
+    local tokenResult = Authorize(self.tokenEndPoint, self.clientID, self.clientSecret);
+    if tokenResult.code ~= 200 then
+        return nil;
+    end
+    local token = tokenResult.value;
     local url = "https://api.spotify.com/v1/tracks/" .. trackID;
-    local token = tokenHelper:GetBasicAuthorization(self.tokenEndPoint, self.clientID, self.clientSecret);
     if token ~= nil then
         local headers = {
             { "Content-Type",  "application/json" },
@@ -158,8 +203,12 @@ function SpotifyHelper:GetTrack(trackID)
 end
 
 function SpotifyHelper:GetTrackByName(trackName)
+    local tokenResult = Authorize(self.tokenEndPoint, self.clientID, self.clientSecret);
+    if tokenResult.code ~= 200 then
+        return nil;
+    end
     local url = "https://api.spotify.com/v1/search";
-    local token = tokenHelper:GetBasicAuthorization(self.tokenEndPoint, self.clientID, self.clientSecret);
+    local token = tokenResult.value;
     if token ~= nil then
         local headers = {
             { "Content-Type",  "application/json" },
