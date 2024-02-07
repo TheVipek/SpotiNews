@@ -6,4 +6,5 @@ return {
     SPOTIFY_CLIENT_SECRET = "XXX",
     CHATGPT_APIKEY = "XXX",
     GENIUS_APIKEY = "XXX",
+    MAX_EMBED_REPLIES = 10
 }

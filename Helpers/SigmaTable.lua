@@ -1,4 +1,0 @@
-SigmaTable = {}
-
-
-return SigmaTable;
